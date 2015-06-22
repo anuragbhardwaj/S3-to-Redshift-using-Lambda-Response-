@@ -12,7 +12,7 @@ var region = process.env['AWS_REGION'];
 
 if (!region || region === null || region === "") {
 	region = "us-east-1";
-	console.log("AWS Lambda Redshift Database Loader using default region " + region);
+	console.log("AWS Lambda Redshift Database Loader using default region (For Response JSON) " + region);
 }
 
 //Requiring aws-sdk. 
@@ -81,61 +81,13 @@ exports.handler = function(event, context) {
 
 		//Local variables definition to get data from JSON file. 
 		var SunEdCustId = inbound_payload.SunEdCustId;
-        var SystemSize = inbound_payload.Quote.SystemSize;
-        var EFCostPerWatt = inbound_payload.Quote.EFCostPerWatt;
-        var Year1Production = inbound_payload.Quote.Year1Production;
-        var CustomerPrepayment = inbound_payload.Quote.CustomerPrepayment;
-        var MasterLeasePaymentEscalationRate = inbound_payload.Quote.MasterLeasePaymentEscalationRate;
-        var Rebate = inbound_payload.Quote.Rebate;
-        var HIPBIYear1Value = inbound_payload.Quote.HIPBIYear1Value;
-        var HIPBITenure = inbound_payload.Quote.HIPBITenure;
-        var HIPBIAnnualDerate = inbound_payload.Quote.HIPBIAnnualDerate;
-        var StateTaxRate = inbound_payload.Quote.StateTaxRate;
-        var CurrentUtilityCost = inbound_payload.Quote.CurrentUtilityCost;
-        var PostSolarUtilityCost = inbound_payload.Quote.PostSolarUtilityCost;
-        var ProposalID = inbound_payload.Quote.ProposalID;
-        var CallVersionID = inbound_payload.Quote.CallVersionID;
-        var AuthorizationCode = inbound_payload.Quote.AuthorizationCode;
-        var ModuleId = inbound_payload.System.ModuleId;
-        var ModuleQuantity = inbound_payload.System.ModuleQuantity;
-        var InverterId = inbound_payload.System.InverterId;
-        var InverterQuantity = inbound_payload.System.InverterQuantity;
-        var MountingType = inbound_payload.System.MountingType;
- 
-        var currentDate = inbound_payload.Contract["calcMap.currentDate"];
-        var installerClientName = inbound_payload.Contract["installer.client.name"];
-        var dealerName = inbound_payload.Contract["calcMap.dealerName"];
-        var homeownerList_0_firstName = inbound_payload.Contract["calcMap.homeownerList.0.firstName"];
-        var homeownerList_0_lastName = inbound_payload.Contract["calcMap.homeownerList.0.lastName"];
-        var homeownerList_1_firstName = inbound_payload.Contract["calcMap.homeownerList.1.firstName"];
-        var homeownerList_1_lastName = inbound_payload.Contract["calcMap.homeownerList.1.lastName"];
-        var product_type = inbound_payload.Contract["product_type"];
-        var numberOfHomeowners = inbound_payload.Contract["calcMap.numberOfHomeowners"];
-
-        var homeownerList_0_address = inbound_payload.Contract["calcMap.homeownerList.0.address"];
-        var homeownerList_0_city = inbound_payload.Contract["calcMap.homeownerList.0.city"];
-        var homeownerList_0_state = inbound_payload.Contract["calcMap.homeownerList.0.state"];
-        var homeownerList_0_zipcode = inbound_payload.Contract["calcMap.homeownerList.0.zipCode"];
-        var homeownerList_0_phone = inbound_payload.Contract["calcMap.homeownerList.0.phone"];
-        var homeownerList_0_email = inbound_payload.Contract["calcMap.homeownerList.0.email"];
-
-        var homeownerList_1_address = inbound_payload.Contract["calcMap.homeownerList.1.address"];
-        var homeownerList_1_city = inbound_payload.Contract["calcMap.homeownerList.1.city"];
-        var homeownerList_1_state = inbound_payload.Contract["calcMap.homeownerList.1.state"];
-        var homeownerList_1_zipcode = inbound_payload.Contract["calcMap.homeownerList.1.zipCode"];
-        var homeownerList_1_phone = inbound_payload.Contract["calcMap.homeownerList.1.phone"];
-        var homeownerList_1_email = inbound_payload.Contract["calcMap.homeownerList.1.email"];
-
-        var homeownerList_2_address = inbound_payload.Contract["calcMap.homeownerList.2.address"];
-        var homeownerList_2_city = inbound_payload.Contract["calcMap.homeownerList.2.city"];
-        var homeownerList_2_state = inbound_payload.Contract["calcMap.homeownerList.2.state"];
-        var homeownerList_2_zipcode = inbound_payload.Contract["calcMap.homeownerList.2.zipCode"];
-        var homeownerList_2_phone = inbound_payload.Contract["calcMap.homeownerList.2.phone"];
-        var homeownerList_2_email = inbound_payload.Contract["calcMap.homeownerList.2.email"];
-
-        var installerClientPhone = inbound_payload.Contract["installer.client.phone"];
-        var productionList_0_col2 = inbound_payload.Contract["productionList.0.col2"];
-        var lifeTimeKwh = inbound_payload.Contract["calcMap.lifetimekWh"];	
+        var PricingQuoteId = inbound_payload.PricingQuoteId;
+        var DownPayment = inbound_payload.DownPayment;
+        var LeaseTerm = inbound_payload.LeaseTerm; 
+        var UniqueFinancialRunId = inbou.UniqueFinancialRunId;
+        var Timestamp = inbound_payload.Timestamp;
+        var FinancialModelVersion = inbound_payload.FinancialModelVersion;
+        var CallVersionId = inbound_payload.CallVersionId; 	
 
 		var suned_id = parseInt(SunEdCustId, 10);
 
