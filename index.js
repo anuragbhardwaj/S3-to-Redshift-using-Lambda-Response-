@@ -85,7 +85,7 @@ exports.handler = function(event, context) {
         var DownPayment = inbound_payload.DownPayment;
         var LeaseTerm = inbound_payload.LeaseTerm; 
         var EstimatedAnnualOutput = inbound_payload.EstimatedAnnualOutput;
-        var UniqueFinancialRunId = inbou.UniqueFinancialRunId;
+        var UniqueFinancialRunId = inbound_payload.UniqueFinancialRunId;
         var Suned_Timestamp = inbound_payload.Timestamp;
         var FinancialModelVersion = inbound_payload.FinancialModelVersion;
         var CallVersionId = inbound_payload.CallVersionId; 	
@@ -96,9 +96,9 @@ exports.handler = function(event, context) {
 		pg.connect(conString, function(err,client){
 			if(err){
 				return console.log("Connection error. ", err);
-			}h");
+			}
 
-            console.log("Connection Established under fetc
+            console.log("Connection Established under fetch");
 			//Querying redshift. 
 			client.query(queryFetch, [SunEdCustId,PricingQuoteId], function(err,result){
 				if(err){
