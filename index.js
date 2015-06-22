@@ -52,10 +52,10 @@ var zlib = require('zlib');
 var conString = "postgresql://abhardwaj:Master12@rs-instance.cysomezynckr.us-west-2.redshift.amazonaws.com:5439/mydb";
 
 //Query string to insert data into Redshift. 
-var queryTextInsert = 'INSERT INTO suned_redshift (suned_cust_id, quote_system_size, quote_ef_cost_per_watt, quote_year1_production, cust_pre_payment, quote_master_lease_pay_esc_rate, quote_rebate, quote_hipbi_year1_value, quote_hipbi_tenure, quote_hipbi_annual_derate, quote_state_tax_rate, quote_current_utility_cost, quote_post_solar_utility_cost, quote_proposal_id, quote_call_version_id, quote_auth_code, system_module_id, system_module_quantity, system_inverter_id, system_inverter_quantity, system_mounting_type, contract_calcmap_current_date, contract_installer_client_name, contract_calcmap_dealer_name, contract_calcmap_howner_0_first_name, contract_calcmap_howner_0_last_name, contract_calcmap_howner_1_first_name, contract_calcmap_howner_1_last_name, contract_product_type, contract_calcmap_n_of_howners, contract_calcmap_howner_0_address, contract_calcmap_howner_0_city, contract_calcmap_howner_0_state, contract_calcmap_howner_0_zipcode, contract_calcmap_howner_0_phone, contract_calcmap_howner_0_email, contract_calcmap_howner_1_address, contract_calcmap_howner_1_city, contract_calcmap_howner_1_state, contract_calcmap_howner_1_zipcode, contract_calcmap_howner_1_phone, contract_calcmap_howner_1_email, contract_calcmap_howner_2_address, contract_calcmap_howner_2_city, contract_calcmap_howner_2_state, contract_calcmap_howner_2_zipcode, contract_calcmap_howner_2_phone, contract_calcmap_howner_2_email, contract_installer_client_phone, contract_production_0_col2, contract_calcmap_lifetime_kwh, array_number, module_type, module_quantity, shading, tilt, azimuth, orientation, monthly_production_values, degradation_rates) values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22,$23,$24,$25,$26,$27,$28,$29,$30,$31,$32,$33,$34,$35,$36,$37,$38,$39,$40,$41,$42,$43,$44,$45,$46,$47,$48,$49,$50,$51,$52,$53,$54,$55,$56,$57,$58,$59,$60)';
+var queryTextInsert = 'INSERT INTO response (sunedcustid, pricingquoteid, customerleasepayments, downpayment, leaseterm, estimatedannualoutput, uniquefinancialrunid, terminationvalues, suned_timestamp, financialmodelversion, callversionid, guaranteedannualoutput) values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12)';
 
 //Query string to fetch data from Redshift. 
-var queryFetch = 'SELECT * from suned_redshift where suned_cust_id = $1 order by array_number asc';
+var queryFetch = 'SELECT * from response where SunEdCustId = $1 and PricingQuoteId = $2';
 
 // Main function for AWS Lambda
 exports.handler = function(event, context) {
@@ -84,8 +84,9 @@ exports.handler = function(event, context) {
         var PricingQuoteId = inbound_payload.PricingQuoteId;
         var DownPayment = inbound_payload.DownPayment;
         var LeaseTerm = inbound_payload.LeaseTerm; 
+        var EstimatedAnnualOutput = inbound_payload.EstimatedAnnualOutput;
         var UniqueFinancialRunId = inbou.UniqueFinancialRunId;
-        var Timestamp = inbound_payload.Timestamp;
+        var Suned_Timestamp = inbound_payload.Timestamp;
         var FinancialModelVersion = inbound_payload.FinancialModelVersion;
         var CallVersionId = inbound_payload.CallVersionId; 	
 
@@ -95,40 +96,27 @@ exports.handler = function(event, context) {
 		pg.connect(conString, function(err,client){
 			if(err){
 				return console.log("Connection error. ", err);
-			}
-			console.log("Connection Established under fetch");
+			}h");
 
+            console.log("Connection Established under fetc
 			//Querying redshift. 
-			client.query(queryFetch, [SunEdCustId], function(err,result){
+			client.query(queryFetch, [SunEdCustId,PricingQuoteId], function(err,result){
 				if(err){
 					console.log("Error returning query", err);
 					context.done("Fatal Error");
 				}
 				console.log("Number of rows: ", result.rows.length);
-				console.log("Number of rows from JSON" + inbound_payload.Array.length);
+				console.log("Number of Arrays for CustomerLeasePayments in JSON: " + inbound_payload.CustomerLeasePayments.length);
+
+                if(result.rows.length > 0){
+                    context.done("Data already exisits for received customer ID.");
+                }
 
 				//Algorithm to check redundancy and add unique data into redshift. 
-				for(var m=0;m<inbound_payload.Array.length;m++){
+				for(var m=0;m<inbound_payload.LeaseTerm;m++){
                   	
-                  	//Insert all the data from JSON file if no data exists in Redshift. 
-                  	if(result.rows.length == 0){
-                        console.log("No records in Redshift");
-                        insertIntoRedshift(m);
-                  	}
-
-                  	//Check for duplicacy and insert rows to redshift. 
-                  	else{
-                  		for(var k=0;k<result.rows;k++){
-	                    	if(result.rows[k].suned_cust_id == SunEdCustId && result.rows[k].array_number == inbound_payload.Array[m].ArrayNumber){
-	                        	console.log("Duplicate Row Exists.");
-	                        	break;           
-                        	}
-	                    	else if(k == result.rows.length-1){
-	                        	insertIntoRedshift(m);
-	                    	} 
-	                	}
-                  	}   	
-            	}
+                  	insertIntoRedshift(m);
+                }
 			});
 		});
 
@@ -139,7 +127,7 @@ exports.handler = function(event, context) {
         			return console.log("Connection Error.", err);
        			}
        			console.log("Connection Established.");
-       			client.query(queryTextInsert, [suned_id, SystemSize, EFCostPerWatt, Year1Production, CustomerPrepayment, MasterLeasePaymentEscalationRate, Rebate, HIPBIYear1Value, HIPBITenure, HIPBIAnnualDerate, StateTaxRate, CurrentUtilityCost, PostSolarUtilityCost, ProposalID, CallVersionID, AuthorizationCode, ModuleId, ModuleQuantity, InverterId, InverterQuantity, MountingType, currentDate, installerClientName, dealerName, homeownerList_0_firstName, homeownerList_0_lastName, homeownerList_1_firstName, homeownerList_1_lastName, product_type, numberOfHomeowners, homeownerList_0_address, homeownerList_0_city, homeownerList_0_state, homeownerList_0_zipcode, homeownerList_0_phone, homeownerList_0_email, homeownerList_1_address, homeownerList_1_city, homeownerList_1_state, homeownerList_1_zipcode, homeownerList_1_phone, homeownerList_1_email, homeownerList_2_address,homeownerList_2_city, homeownerList_2_state, homeownerList_2_zipcode, homeownerList_2_phone, homeownerList_2_email, installerClientPhone, productionList_0_col2, lifeTimeKwh, inbound_payload.Array[m].ArrayNumber, inbound_payload.Array[m].ModuleType, inbound_payload.Array[m].ModuleQuantity, inbound_payload.Array[m].Shading, inbound_payload.Array[m].Tilt, inbound_payload.Array[m].Azimuth, inbound_payload.Array[m].Orientation, inbound_payload.Array[m].monthlyProductionValues, inbound_payload.Array[m].DegradationRate], function(err,result){
+       			client.query(queryTextInsert, [SunEdCustId, PricingQuoteId, inbound_payload.CustomerLeasePayments[m], DownPayment, LeaseTerm, EstimatedAnnualOutput, UniqueFinancialRunId, inbound_payload.TerminationValues[m], Suned_Timestamp, FinancialModelVersion, CallVersionId, inbound_payload.GuaranteedAnnualOutput[m]], function(err,result){
                		if(err){
                    		return console.log('Error returning query', err);
                		}
