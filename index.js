@@ -60,7 +60,7 @@ var queryFetch = 'SELECT * from response where SunEdCustId = $1 and PricingQuote
 // Main function for AWS Lambda
 exports.handler = function(event, context) {
 
-    // Get the object from the event and show its content type
+    // Get the object from the event and show its content type.
     var bucket = event.Records[0].s3.bucket.name;
     var key = event.Records[0].s3.object.key;
     s3.getObject({Bucket: bucket, Key: key}, function(err, data) {
