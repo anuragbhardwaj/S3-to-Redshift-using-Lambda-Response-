@@ -82,16 +82,32 @@ exports.handler = function(event, context) {
 		//Local variables definition to get data from JSON file. 
 		var SunEdCustId = inbound_payload.SunEdCustId;
         var PricingQuoteId = inbound_payload.PricingQuoteId;
+        var customerLeasePaymentsArray = [];
         var DownPayment = inbound_payload.DownPayment;
         var LeaseTerm = inbound_payload.LeaseTerm; 
+        var estimatedAnnualOutputArray = [];
         var EstimatedAnnualOutput = inbound_payload.EstimatedAnnualOutput;
         var UniqueFinancialRunId = inbound_payload.UniqueFinancialRunId;
+        var terminationValuesArray = [];
         var Suned_Timestamp = inbound_payload.Timestamp;
         var FinancialModelVersion = inbound_payload.FinancialModelVersion;
-        var CallVersionId = inbound_payload.CallVersionId; 	
+        var CallVersionId = inbound_payload.CallVersionId; 
+        var GuaranteedAnnualOutput = inbound_payload.GuaranteedAnnualOutput;	
 
 		var suned_id = parseInt(SunEdCustId, 10);
 
+        for(var i=0;i<LeaseTerm;i++){
+            customerLeasePaymentsArray.push(inbound_payload.CustomerLeasePayments[i]);
+        }
+
+        for(var j=0;j<LeaseTerm;j++){
+            terminationValuesArray.push(inbound_payload.TerminationValues[j]);
+        }
+
+        //Trimming parameters in JSON. 
+        var NewEstimatedAnnualOutput = EstimatedAnnualOutput.substring(1,EstimatedAnnualOutput.length-1);
+        var NewGuaranteedAnnualOutput = GuaranteedAnnualOutput.substring(1,GuaranteedAnnualOutput.length-1)
+         
 		//Establishing connection to Redshift using postgres. 
 		pg.connect(conString, function(err,client){
 			if(err){
@@ -99,6 +115,7 @@ exports.handler = function(event, context) {
 			}
 
             console.log("Connection Established under fetch");
+
 			//Querying redshift. 
 			client.query(queryFetch, [SunEdCustId,PricingQuoteId], function(err,result){
 				if(err){
@@ -111,29 +128,30 @@ exports.handler = function(event, context) {
                 if(result.rows.length > 0){
                     context.done("Data already exisits for received customer ID.");
                 }
-
-				//Algorithm to check redundancy and add unique data into redshift. 
-				for(var m=0;m<inbound_payload.LeaseTerm;m++){
-                  	
-                  	insertIntoRedshift(m);
+                else{
+                    insertIntoRedshift();
                 }
+				
+				
 			});
 		});
 
 		//Method to run insert query to push data into redshift. 
-		var insertIntoRedshift = function(m){
+		var insertIntoRedshift = function(){
 			pg.connect(conString, function(err,client){
         		if(err){
         			return console.log("Connection Error.", err);
        			}
        			console.log("Connection Established.");
-       			client.query(queryTextInsert, [SunEdCustId, PricingQuoteId, inbound_payload.CustomerLeasePayments[m], DownPayment, LeaseTerm, EstimatedAnnualOutput, UniqueFinancialRunId, inbound_payload.TerminationValues[m], Suned_Timestamp, FinancialModelVersion, CallVersionId, inbound_payload.GuaranteedAnnualOutput[m]], function(err,result){
+       			client.query(queryTextInsert, [SunEdCustId, PricingQuoteId, customerLeasePaymentsArray.toString(), DownPayment, LeaseTerm, NewEstimatedAnnualOutput, UniqueFinancialRunId, terminationValuesArray.toString(), Suned_Timestamp, FinancialModelVersion, CallVersionId, NewGuaranteedAnnualOutput], function(err,result){
                		if(err){
                    		return console.log('Error returning query', err);
                		}
                		console.log('Row inserted. Go and check on Redshift: ' + result);
                		return client;
-        		});
+                    end();
+        		    pg.end();  
+                });
 				
         	});	
 		}
